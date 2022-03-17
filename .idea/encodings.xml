@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/src/VRPTW/CustomerType.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/VRPTW/EvaluateRoute.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/VRPTW/InitAndPrint.java" charset="GBK" />
     <file url="file://$PROJECT_DIR$/src/VRPTW/Main.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/VRPTW/Parameter.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/VRPTW/RouteType.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/VRPTW/TS.java" charset="GBK" />
   </component>
 </project>
