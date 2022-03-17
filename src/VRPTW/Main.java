@@ -18,5 +18,6 @@ public class Main {
 		double usedTime= (endtime - begintime)/(1e9);
 		System.out.println();
 		System.out.println("Total run time £º"+usedTime+"s");
+		System.out.println();
 	}
 }
