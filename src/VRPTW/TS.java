@@ -1,5 +1,7 @@
 package VRPTW;
  
+import java.util.Random;
+
 import static VRPTW.EvaluateRoute.*;
 import static java.lang.Math.*;
 import static VRPTW.Parameter.*;
@@ -9,19 +11,29 @@ public class TS {
 	public static void TabuSearch() {
 		//禁忌搜索
 	    //采取插入算子，即从一条路径中选择一点插入到另一条路径中
+		//这里可以考虑切换一个算子进行运算
 	    //在该操作下形成的邻域中选取使目标函数最小化的解
 		
 	    double Temp1;
 	    double Temp2;
 
 	    //初始化禁忌表
-	    for ( int i = 2; i <= CustomerNumber + 1; ++i ) {
+	    for ( int i = 2; i <= CustomerNumber + 1; ++i ) {   //为什么要从2开始？ 0 ， 1？ 因为客户点从2开始
 	        for ( int j = 1; j <= VehicleNumber; ++j )
-	            Tabu[i][j] = 0;
+	            Tabu[i][j] = 0;								//{[],[],[]}
 	        TabuCreate[i] = 0;
 	    }
 
-	    int Iteration = 0;
+		//初始化故障表
+		for (int i = 0; i < Faulty_vehicle.length; i++) {
+			Faulty_vehicle[i] = CustomerNumber;
+		}
+		//随机发生故障的路径，以及发生路障的位置
+		Random r1 = new Random(2);
+		for (int i = 0; i < Faulty_Nu; i++) {
+			Faulty_vehicle[r1.nextInt(VehicleNumber)] = r1.nextInt(10);
+		}
+	    int Iteration = 0;      //更迭代数，可以做个图来显示，随迭代次数变化的总成本的变化 ，再然后可以对算子进行变化，比较算子间对最优解的收敛速度的快慢
 	    while ( Iteration < IterMax ) {
 	        int BestC = 0;
 	        int BestR = 0;
@@ -30,7 +42,7 @@ public class TS {
 	        double BestV = INF;
 
 	        for ( int i = 2; i <= CustomerNumber + 1; ++i ) {//对每一个客户节点
-	            for ( int j = 1; j < routes[customers[i].R].V.size(); ++j ) {//对其所在路径中的每一个节点
+	            for ( int j = 1; j < routes[customers[i].R].V.size(); ++j ) {  //对其所在路径中的每一个节点
 	                if ( routes[customers[i].R].V.get(j).Number == i ) {//找到节点i在其路径中所处的位置j
 	                    P = j;//标记位置
 	                    break;
@@ -44,31 +56,33 @@ public class TS {
 	            	 for ( int l = 1; l < routes[j].V.size(); ++l )//分别枚举每一个节点所在位置
 	                        if ( customers[i].R != j ) {
 	                        	
-	                        	addnode(j,l,i);//将客户l插入路径j的第i个位置
+	                        	addnode(j,l,i);//将客户i插入路径j的第l个位置
 	                        	
 	                            Temp1 = routes[customers[i].R].SubT;  //记录原先所在路径的时间窗违反总和
 	                            Temp2 = routes[j].SubT;               //记录插入的路径时间窗违反总和
 	                            
 	                            //更新i节点移出的路径：
-	                    	    routes[customers[i].R].SubT = 0;
+	                    	    routes[customers[i].R].SubT = 0;				//初始化SubT为0
 	                    	    UpdateSubT(routes[customers[i].R]);
 	                    	    //更新i节点移入的路径j：
 	                    	    routes[j].SubT = 0;
 	                    	    UpdateSubT(routes[j]);
-	                            double TempV = Calculation ( routes, i, j );//计算目标函数值
+	                            double TempV = Calculation ( routes, i, j ,Iteration);//计算目标函数值
 	                            
 	                            if((TempV < Ans)|| //藐视准则，如果优于全局最优解
 	                            		(TempV < BestV &&   //或者为局部最优解，且未被禁忌
-	                            		   ( routes[j].V.size() > 2 && Tabu[i][j] <= Iteration ) || ( routes[j].V.size() == 2 && TabuCreate[i] <= Iteration )))
+	                            		   ( routes[j].V.size() > 2 && Tabu[i][j] <= Iteration ) || ( routes[j].V.size() == 2 && TabuCreate[i] <= Iteration ))){
+									BestV = TempV; //best object 最优成本
+									BestC = i;     //best customer客户
+									BestR = j;     //best route   所属路径
+									BestP = l;     //best position所在位置
+								}
 	                            	//禁忌插入操作，前者为常规禁忌表，禁忌插入算子；后者为特殊禁忌表，禁忌使用新的车辆
 	            	            	//路径中节点数超过2，判断是否禁忌插入算子；路径中只有起点、终点，判断是否禁忌使用新车辆。
 	                            if ( TempV < BestV ) { //记录局部最优情况
-	                                BestV = TempV; //best vehicle 所属车辆
-	                                BestC = i;     //best customer客户
-	                                BestR = j;     //best route   所属路径
-	                                BestP = l;     //best position所在位置
+
 	                            }
-	                            
+
 	                            //节点新路径复原
 	                            routes[customers[i].R].SubT = Temp1;
 	                            routes[j].SubT = Temp2;
@@ -79,8 +93,8 @@ public class TS {
 	        }
 
 	        //更新车辆禁忌表
-	        if ( routes[BestR].V.size() == 2 )
-	            TabuCreate[BestC] = Iteration + 2 * TabuTenure + (int)(random() * 10);
+	        if ( routes[BestR].V.size() == 2 )//如果车辆没有被启用
+	            TabuCreate[BestC] = Iteration + 2 * TabuTenure + (int)(random() * 10);   //更新该客户点的禁忌步长
 	        //更新禁忌表
 	        Tabu[BestC][customers[BestC].R] = Iteration + TabuTenure + (int)(random() * 10);
 	        //如果全局最优的节点正好属于当前路径，过
@@ -116,11 +130,12 @@ public class TS {
 	        	    }
 	            Ans = BestV;
 	        }
-	        
+	        Resoultions[Iteration] = Ans;
 	        Iteration++;
 	    }
 	}
-	
+
+
 	private static void addnode(int r,int pos,int Cus) {//节点加入的路径routes[r],节点customer[Cus],节点加入路径的位置pos
 		//更新在路径r中加上节点Cus的需求
         routes[r].Load += customers[Cus].Demand;
@@ -129,6 +144,9 @@ public class TS {
         		- Graph[routes[r].V.get(pos-1).Number][routes[r].V.get(pos).Number]
                 + Graph[routes[r].V.get(pos-1).Number][customers[Cus].Number] 
                 + Graph[routes[r].V.get(pos).Number][customers[Cus].Number];
+
+		//同样这里为什么不更新时间窗超时成本？
+
         //在路径r中插入节点Cus
         routes[r].V.add (pos ,new CustomerType (customers[Cus]) );//插入i到下标为l处
 	}
@@ -142,6 +160,9 @@ public class TS {
         		- Graph[routes[r].V.get(pos-1).Number][routes[r].V.get(pos).Number]
 	            - Graph[routes[r].V.get(pos).Number][routes[r].V.get(pos+1).Number] 
 	            + Graph[routes[r].V.get(pos-1).Number][routes[r].V.get(pos+1).Number];
+
+		//这里为什么没有更新时间窗的成本？  因为当前已经选定了插入的车辆路径，可以直接算得路径的信息，但是由于插入路径当中的具体位置还不清楚，所以暂时不算超时时间窗成本，这样可以降低计算时间
+
         //从路径r中去除节点Cus
         routes[r].V.remove ( pos );
 	}

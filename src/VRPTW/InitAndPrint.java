@@ -46,7 +46,7 @@ public class InitAndPrint {
 		}
 		
 		for ( int i = 1; i <= VehicleNumber; ++i ) {
-	        if ( routes[i].V.size()!=0 )
+	        if ( routes[i].V.size()!=0 )   //如果一开始集合内有数据的话，就清空
 	            routes[i].V.clear();
 	        
 	        routes[i].V.add ( new CustomerType (customers[1]) );//尝试往这里加入一个复制，后面也都要改。
@@ -56,41 +56,41 @@ public class InitAndPrint {
 	        //算例中给出节点0有起始时间0和终止时间，所以如上赋值。
 	        routes[i].Load = 0;
 	    }
-		
-		Ans = INF;
 
+		Ans = INF;  		//首先令初始成本为一个较大值，然后再持续优化
+		//构造距离矩阵
 	    for ( int i = 1; i <= CustomerNumber + 1; ++i )
 	        for ( int j = 1; j <= CustomerNumber + 1; ++j )
 	            Graph[i][j] = Distance ( customers[i], customers[j] );
 	   
 	}
 	
-	
+
 	//构造初始解
 	public static void Construction() {
 	    int[] Customer_Set=new int[CustomerNumber + 10];
 	    for ( int i = 1; i <= CustomerNumber; ++i )
-	        Customer_Set[i] = i + 1;
+	        Customer_Set[i] = i + 1;         //【2，3,4,5...CustomerNumbe】  ， 定义的客户点的总集合
 
-	    int Sizeof_Customer_Set = CustomerNumber;
-	    int Current_Route = 1;
+	    int Sizeof_Customer_Set = CustomerNumber; //客户点的大小
+	    int Current_Route = 1;						//初始化原路径为第一条
 
 	    //以满足容量约束为目的的随机初始化
 	    //即随机挑选一个节点插入到第m条路径中，若超过容量约束，则插入第m+1条路径
 	    //且插入路径的位置由该路径上已存在的各节点的最早时间决定
-	    while ( Sizeof_Customer_Set > 0 ) {
+	    while ( Sizeof_Customer_Set > 0 ) {      //不断地从客户集合中随机选取客户点加入到路径当中
 			int K = (int) (random() * Sizeof_Customer_Set + 1);
 			int C = Customer_Set[K];
 			Customer_Set[K] = Customer_Set[Sizeof_Customer_Set];
 			Sizeof_Customer_Set--;//将当前服务过的节点赋值为最末节点值,数组容量减1
 			//随机提取出一个节点，类似产生乱序随机序列的代码
 
-	        if ( routes[Current_Route].Load + customers[C].Demand > Capacity )
+	        if ( routes[Current_Route].Load + customers[C].Demand > Capacity )     //初始状态下每条路径的初始载货量都为0，在这个逻辑条件下，路径应该是从1逐渐被满足的
 	            Current_Route++;
 	        //不满足容量约束，下一条车辆路线
 	        
 	        for ( int i = 0; i < routes[Current_Route].V.size() - 1; i++ )//对路径中每一对节点查找，看是否能插入新节点
-	            if ( ( routes[Current_Route].V.get(i).Begin <= customers[C].Begin ) && ( customers[C].Begin <= routes[Current_Route].V.get(i + 1).Begin ) ) {
+	            if ( ( routes[Current_Route].V.get(i).End <= customers[C].End ) && ( customers[C].End <= routes[Current_Route].V.get(i + 1).End ) ) {
 	            	routes[Current_Route].V.add ( i + 1, new CustomerType (customers[C]) );
 	            	//判断时间窗开始部分，满足，则加入该节点。
 	            	routes[Current_Route].Load += customers[C].Demand;
@@ -118,9 +118,14 @@ public class InitAndPrint {
 	
 	public static void Output () {//结果输出
 	    System.out.println("************************************************************");
-	    System.out.println("The Minimum Total Distance = "+ Ans);
+	    System.out.println("The Minimum Total Cost = "+ Ans);
 	    System.out.println("Concrete Schedule of Each Route as Following : ");
-
+		System.out.println("发生故障的路径为：" );
+		for (int i = 0; i < Faulty_vehicle.length; i++) {
+			if (Faulty_vehicle[i] != 100){
+				System.out.println((i+1)+":" +Faulty_vehicle[i]);
+			}
+		}
 	    int M = 0;
 	    for ( int i = 1; i <= VehicleNumber; ++i )
 	        if ( Route_Ans[i].V.size() > 2 ) {
@@ -131,29 +136,36 @@ public class InitAndPrint {
 	            	System.out.print( Route_Ans[i].V.get(j).Number + " -> ");
 	            System.out.println( Route_Ans[i].V.get(Route_Ans[i].V.size() - 1).Number);
 	        }
-	    System.out.println("************************************************************");
+		System.out.println("Alpha:"+Alpha);
+		System.out.println("Beta:"+Beta);
+		System.out.println("路径平衡指数为：");
+		System.out.println("************************************************************");
 	}
 	
 	public static void CheckAns() {
 		//检验距离计算是否正确
-	    double Check_Ans = 0;
+	    double Distance_cost = 0;
 	    for ( int i = 1; i <= VehicleNumber; ++i )
 	        for ( int j = 1; j < Route_Ans[i].V.size(); ++j )
-	            Check_Ans += Graph[Route_Ans[i].V.get(j-1).Number][Route_Ans[i].V.get(j).Number];
+				Distance_cost += Graph[Route_Ans[i].V.get(j-1).Number][Route_Ans[i].V.get(j).Number];
 
-	    System.out.println("Check_Ans="+Check_Ans );
+	    System.out.println("Distance Cost ="+Distance_cost );
 	    
 	    //检验是否满足时间窗约束
 	    boolean flag=true;
+		double Overtime_cost = 0;
 	    for (int i=1;i<=VehicleNumber;i++){
 	    	UpdateSubT(Route_Ans[i]);
+			Overtime_cost += Beta * Route_Ans[i].SubT;
 	    	if( Route_Ans[i].SubT>0 )
 	    		flag=false;
 	    }
-	    if (flag) 
+		System.out.println("Overtime Cost ="+Overtime_cost);
+		if (flag)
 	    	System.out.println("Solution satisfies time windows construction");
 	    else 
 	    	System.out.println("Solution not satisfies time windows construction");
-	    
+		System.out.println("Net Cost = "+(net_cost = Distance_cost + Overtime_cost));
+
 	}
 }
