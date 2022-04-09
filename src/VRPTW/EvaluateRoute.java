@@ -95,6 +95,8 @@ public class EvaluateRoute {
 		double max = 0;
 		double sum =0;
 		int V_n = 0;
+
+		//以时间作为平衡系数的计算因子
 //		for (int i = 0; i < Time.length; i++) {
 //			if (Time[i] != 0 ){
 //				sum += Time[i];

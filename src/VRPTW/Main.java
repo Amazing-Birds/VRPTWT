@@ -6,6 +6,7 @@ import static VRPTW.InitAndPrint.*;
 import static VRPTW.TS.*;
 import static VRPTW.JavaCreateMap.*;
 import static VRPTW.DrawTest.*;
+import static VRPTW.Parameter.*;
 
 
 public class Main {
@@ -15,6 +16,7 @@ public class Main {
 
 		ReadIn();
 		Construction();
+
 		TabuSearch();
 		Output();
 		CheckAns();
@@ -24,12 +26,15 @@ public class Main {
 		System.out.println();
 		System.out.println("Total run time ：" + usedTime + "s");
 		draw();										//绘制收敛图表
-		//new Visualization().setVisible(true);   //Graphics类实现绘图，但是会有锯齿产生
 		EventQueue.invokeLater(new Runnable(){
 			public void run() {
 				DrawImg f=new DrawImg();
 			}
 		});
 
+		WriteArray wa = new WriteArray();
+		wa.writeArrayToTxt(Resoultions, "result1.txt");
+		wa.writeArrayToTxt(B,"result2.txt");
 	}
+
 }

@@ -6,7 +6,6 @@ import static VRPTW.EvaluateRoute.*;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
-import VRPTW.RouteType;
 
 public class InitAndPrint {
 	
@@ -18,7 +17,8 @@ public class InitAndPrint {
 	
 	//读取数据
 	public static void ReadIn(){
-
+		int Route_nu = 22;
+		 init = new int[Route_nu][100];
 		for(int i=0;i<CustomerNumber+10;i++) {
 			customers[i]=new CustomerType();
 			routes[i]=new RouteType();
@@ -26,8 +26,8 @@ public class InitAndPrint {
 		}
 		
 		try {	
-			Scanner in = new Scanner(new FileReader("c101.txt"));
-			
+			Scanner in = new Scanner(new FileReader("rc101.txt"));
+			Scanner rs = new Scanner(new FileReader("mytxt.txt"));
 			 for ( int i = 1; i <= CustomerNumber + 1; ++i ) {
 				 customers[i].Number=in.nextInt()+1;
 				 customers[i].X=in.nextDouble();
@@ -37,6 +37,11 @@ public class InitAndPrint {
 				 customers[i].End=in.nextDouble();
 				 customers[i].Service=in.nextDouble();
 			 }
+			for (int i = 0; i < Route_nu; i++) {
+				for (int j = 0; j < 100; j++) {
+					init[i][j] = rs.nextInt();
+				}
+			}
 			
 			in.close();
 		}catch (FileNotFoundException e) {
@@ -58,16 +63,31 @@ public class InitAndPrint {
 	    }
 
 		Ans = INF;  		//首先令初始成本为一个较大值，然后再持续优化
+//		Ans = init[init.length-1][0];
+//		Ans = 3000;
+
 		//构造距离矩阵
-	    for ( int i = 1; i <= CustomerNumber + 1; ++i )
-	        for ( int j = 1; j <= CustomerNumber + 1; ++j )
+	    for ( int i = 1; i <= CustomerNumber +1; ++i )
+	        for ( int j = 1; j <= CustomerNumber+ 1; ++j )
 	            Graph[i][j] = Distance ( customers[i], customers[j] );
-	   
+
+
+
 	}
 	
 
 	//构造初始解
 	public static void Construction() {
+		int[] re = new int[CustomerNumber];
+		int k = 0;
+		for (int i = 0; i < init.length - 1; i++) {
+			for (int j = 0; j < init[0].length; j++) {
+				if (init[i][j] != 0 && init[i][j] != 1 ){
+					re[k] = init[i][j];
+					k++;
+				}
+			}
+		}
 	    int[] Customer_Set=new int[CustomerNumber + 10];
 	    for ( int i = 1; i <= CustomerNumber; ++i )
 	        Customer_Set[i] = i + 1;         //【2，3,4,5...CustomerNumbe】  ， 定义的客户点的总集合
@@ -79,16 +99,20 @@ public class InitAndPrint {
 	    //即随机挑选一个节点插入到第m条路径中，若超过容量约束，则插入第m+1条路径
 	    //且插入路径的位置由该路径上已存在的各节点的最早时间决定
 	    while ( Sizeof_Customer_Set > 0 ) {      //不断地从客户集合中随机选取客户点加入到路径当中
-			int K = (int) (random() * Sizeof_Customer_Set + 1);
-			int C = Customer_Set[K];
-			Customer_Set[K] = Customer_Set[Sizeof_Customer_Set];
+//			int K = (int) (random() * Sizeof_Customer_Set + 1);
+//			int C = Customer_Set[K];
+//			Customer_Set[K] = Customer_Set[Sizeof_Customer_Set];
+			int C = re[CustomerNumber - Sizeof_Customer_Set];
 			Sizeof_Customer_Set--;//将当前服务过的节点赋值为最末节点值,数组容量减1
 			//随机提取出一个节点，类似产生乱序随机序列的代码
+
+
+
 
 	        if ( routes[Current_Route].Load + customers[C].Demand > Capacity )     //初始状态下每条路径的初始载货量都为0，在这个逻辑条件下，路径应该是从1逐渐被满足的
 	            Current_Route++;
 	        //不满足容量约束，下一条车辆路线
-	        
+
 	        for ( int i = 0; i < routes[Current_Route].V.size() - 1; i++ )//对路径中每一对节点查找，看是否能插入新节点
 	            if ( ( routes[Current_Route].V.get(i).End <= customers[C].End ) && ( customers[C].End <= routes[Current_Route].V.get(i + 1).End ) ) {
 	            	routes[Current_Route].V.add ( i + 1, new CustomerType (customers[C]) );
@@ -99,7 +123,18 @@ public class InitAndPrint {
 	                break;
 	            }
 	    }
-	    
+
+//		for (int i = 0; i < init.length; i++) {
+//			for (int j = 0; j < init[0].length; j++) {
+//				if (init[i][j] != 0){
+//					routes[i+1].V.add(new CustomerType(customers[init[i][j]]));
+//
+//					if (init[i][j] != 1) customers[init[i][j]].R = i+1;
+//					routes[i+1].Load += customers[init[i][j]].Demand;
+//				}
+//			}
+//		}
+
 	    
 	    //初始化计算超过时间窗约束的总量
 	    for ( int i = 1; i <= VehicleNumber; ++i ) {
@@ -112,7 +147,7 @@ public class InitAndPrint {
 	        
 	        UpdateSubT(routes[i]);
 	    }
-	    
+		//将最优解初始化
 	}
 
 	
@@ -138,7 +173,7 @@ public class InitAndPrint {
 	        }
 		System.out.println("Alpha:"+Alpha);
 		System.out.println("Beta:"+Beta);
-		System.out.println("路径平衡指数为：");
+		System.out.println("路径平衡指数为："+ B[IterMax-1]);
 		System.out.println("************************************************************");
 	}
 	

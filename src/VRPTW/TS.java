@@ -11,7 +11,7 @@ public class TS {
 	public static void TabuSearch() {
 		//禁忌搜索
 	    //采取插入算子，即从一条路径中选择一点插入到另一条路径中
-		//这里可以考虑切换一个算子进行运算
+		//这里也可以考虑切换一个算子进行运算
 	    //在该操作下形成的邻域中选取使目标函数最小化的解
 		
 	    double Temp1;
@@ -26,13 +26,13 @@ public class TS {
 
 		//初始化故障表
 		for (int i = 0; i < Faulty_vehicle.length; i++) {
-			Faulty_vehicle[i] = CustomerNumber;
+			Faulty_vehicle[i] = CustomerNumber ;
 		}
 		//随机发生故障的路径，以及发生路障的位置
-		Random r1 = new Random(2);
-		for (int i = 0; i < Faulty_Nu; i++) {
-			Faulty_vehicle[r1.nextInt(VehicleNumber)] = r1.nextInt(10);
-		}
+//		Random r1 = new Random(2);
+//		for (int i = 0; i < Faulty_Nu; i++) {
+//			Faulty_vehicle[r1.nextInt(VehicleNumber)] = r1.nextInt(10);
+//		}
 	    int Iteration = 0;      //更迭代数，可以做个图来显示，随迭代次数变化的总成本的变化 ，再然后可以对算子进行变化，比较算子间对最优解的收敛速度的快慢
 	    while ( Iteration < IterMax ) {
 	        int BestC = 0;
@@ -40,7 +40,6 @@ public class TS {
 	        int BestP = 0;
 	        int P=0;
 	        double BestV = INF;
-
 	        for ( int i = 2; i <= CustomerNumber + 1; ++i ) {//对每一个客户节点
 	            for ( int j = 1; j < routes[customers[i].R].V.size(); ++j ) {  //对其所在路径中的每一个节点
 	                if ( routes[customers[i].R].V.get(j).Number == i ) {//找到节点i在其路径中所处的位置j
@@ -48,7 +47,7 @@ public class TS {
 	                    break;
 	                }
 	            }
-	          
+	          	if (P == 0) System.out.println("没有找到位置");
 	            removenode(customers[i].R,P,i);//将客户i从原路径的第P个位置中移除
 	            
 	            //找到一条路径插入删去的节点
@@ -142,7 +141,7 @@ public class TS {
         //更新在路径r中插入节点Cus后所组成的路径距离
         routes[r].Dis = routes[r].Dis 
         		- Graph[routes[r].V.get(pos-1).Number][routes[r].V.get(pos).Number]
-                + Graph[routes[r].V.get(pos-1).Number][customers[Cus].Number] 
+                + Graph[routes[r].V.get(pos-1).Number][customers[Cus].Number]
                 + Graph[routes[r].V.get(pos).Number][customers[Cus].Number];
 
 		//同样这里为什么不更新时间窗超时成本？
@@ -157,8 +156,8 @@ public class TS {
         routes[r].Load -= customers[Cus].Demand;
         //更新在路径r中去除节点Cus后所组成的路径的距离
         routes[r].Dis = routes[r].Dis 
-        		- Graph[routes[r].V.get(pos-1).Number][routes[r].V.get(pos).Number]
-	            - Graph[routes[r].V.get(pos).Number][routes[r].V.get(pos+1).Number] 
+         		- Graph[routes[r].V.get(pos-1).Number][routes[r].V.get(pos).Number]
+	            - Graph[routes[r].V.get(pos).Number][routes[r].V.get(pos+1).Number]
 	            + Graph[routes[r].V.get(pos-1).Number][routes[r].V.get(pos+1).Number];
 
 		//这里为什么没有更新时间窗的成本？  因为当前已经选定了插入的车辆路径，可以直接算得路径的信息，但是由于插入路径当中的具体位置还不清楚，所以暂时不算超时时间窗成本，这样可以降低计算时间
